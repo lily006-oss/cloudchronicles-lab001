@@ -1,0 +1,108 @@
+S is Situation
+A regional outage has impact the us-central1 region in Google Cloud Platform (GCP). This region hosts critical components of a web application including:
+
+Cloud SQL (Primary)
+
+App Engine / GKE workloads
+
+Cloud Storage buckets
+
+Cloud Pub/Sub message flows
+
+The outage has caused application downtime, data unavailability, and delayed message processing, directly impacting business operations and end-user experience.
+
+T is Task
+Design and implement a resilient disaster recovery (DR) and failover plan that ensures:
+
+The High availability and the loss of minimal data 
+
+Automated failover and alerting
+
+Seamless recovery of core services and workloads
+
+The plan must use Google Cloud-native tools and best practices for multi-region resilience.
+
+A is Action
+1. Database Recovery – Cloud SQL
+Pre-outage setup:
+
+Deploy a Cloud SQL cross-region read replica in us-east1.
+
+Enable automated backups and point-in-time recovery.
+
+Replication type: Async, but consider High Availability (HA) with external failover tools like Cloud SQL Proxy with health checks.
+
+During outage:
+
+Promote the read replica in us-east1 to become the new primary using the gcloud sql instances promote-replica command.
+
+Update application connection strings (via secret manager or config maps) to point to the new primary.
+
+2. Storage Recovery – Cloud Storage
+Pre-outage setup:
+
+Store static and critical files in Multi-Region Cloud Storage buckets (e.g., us, nam4).
+
+Enable Object Versioning to prevent accidental data overwrites.
+
+Use Bucket Lock policies for compliance-critical data.
+
+During outage:
+
+Since multi-region storage is not tied to a single region, applications can continue accessing assets with no change.
+
+3. Application Compute Failover
+Pre-outage setup:
+
+Use GKE Autopilot or App Engine flexible environment with deployments in multi-regions (us-east1, us-west1).
+
+Use Cloud Load Balancer with multi-region backends and health checks to route traffic to healthy services.
+
+During outage:
+
+Traffic automatically rerouted by the load balancer to healthy backends outside us-central1.
+
+4. Messaging & Event Processing – Cloud Pub/Sub
+Pre-outage setup:
+
+Design Pub/Sub topics to be global, decoupling publishers and subscribers from region affinity.
+
+Subscribers (e.g., Cloud Functions, Dataflow) should be deployed in at least two regions.
+
+During outage:
+
+Messages published to global topics are stored durably and can be processed once subscriber services in healthy regions recover or scale up.
+
+5. Monitoring & Alerting
+Use Cloud Monitoring and Alerting to:
+
+Detect region-specific service degradation.
+
+Send alerts via Pub/Sub, which can trigger:
+
+Cloud Functions for automation (e.g., failover steps)
+
+Notification channels (email, Slack, SMS)
+
+Sample Pub/Sub-based automation:
+
+Trigger a Cloud Function on alert to promote a Cloud SQL replica.
+
+Modify DNS records (using Cloud DNS) via API to redirect traffic.
+
+R - Result
+With this plan:
+
+Database downtime is minimized (~1-2 minutes) with a read replica promotion.
+
+Application uptime is preserved via load-balanced multi-region compute.
+
+Data remains accessible due to multi-region storage.
+
+Messaging services continue without disruption.
+
+Automated alerts and actions reduce manual intervention and recovery time.
+
+RTO (Recovery Time Objective) is under 5 minutes.
+
+RPO (Recovery Point Objective) is near zero depending on replication lag.
