@@ -1,0 +1,14 @@
+A Google Cloud us-central1 regional outage has occurred. Here's a quick overview of our disaster recovery plan:
+
+Our goal is to restore operations within 4 hours (RTO) and limit data loss to 1 hour (RPO) by failing over to our pre-configured us-east1 region.
+
+Key Actions:
+Detection: Pub/Sub alerts from Cloud Monitoring immediately notify our team of issues in us-central1.
+Failover:
+Cloud SQL: We'll promote a us-east1 read replica to be the new primary database.
+Cloud Storage: No action needed; our multi-region Cloud Storage automatically handles data accessibility from us-east1.
+Compute/GKE: We'll scale up workloads in us-east1 and update DNS records to redirect traffic to that region.
+Pub/Sub: No action needed; Pub/Sub is a global service and remains unaffected.
+Validation: We'll conduct thorough health checks and application testing in us-east1.
+Recovery: Once us-central1 is restored, we'll establish new replicas for data synchronization and can optionally migrate back.
+This plan ensures rapid recovery and minimal disruption by leveraging Google Cloud's built-in redundancy and global services.
